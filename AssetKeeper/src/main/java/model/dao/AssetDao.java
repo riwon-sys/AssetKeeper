@@ -62,7 +62,7 @@ public class AssetDao {
     // 비품 전체 조회 처리 메소드
     public List<AssetDto> getAllAssets() { // 겟 올 어셋츠
         List<AssetDto> assets = new ArrayList<>();
-        String sql = "SELECT * FROM assets";
+        String sql = "SELECT * FROM assets order by id desc";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
@@ -85,33 +85,33 @@ public class AssetDao {
         return assets;
     }
     
-    
-    // 비품 수정 처리 메소드
-    public boolean updateAsset( AssetDto assetDto ) {
-    	try {
-			String sql = " update assets set name  = ? , manager = ? ,purchasePlace = ? ,purchaseDate = ? ,purchasePrice = ?  ,currentLocation = ? ,specialNotes = ? " + "where id = ? ";
-		    PreparedStatement ps = conn.prepareStatement(sql);
-		    ps.setString(1,assetDto.getName());
-		    ps.setString(2,assetDto.getManager());
-		    ps.setString(3,assetDto.getPurchasePlace());
-		    ps.setString(4, assetDto.getPurchaseDate());
-		    
-		    ps.setDouble(5,assetDto.getPurchasePrice());
-		    
-		    ps.setString(6,assetDto.getCurrentLocation());
-		    ps.setString(7,assetDto.getSpecialNotes());
-		    
-		    ps.setInt(8,assetDto.getId());
-		    
-		    int count = ps.executeUpdate();
-		    if(count ==1) return true;
-		    
-    	
-    	
-    	} catch (Exception e) {System.out.println(e);
-			// TODO: handle exception
-		}
-    	return false;
+    // 비품 개별 수정 처리 메소드
+    public boolean updateAsset(AssetDto assetDto) {
+        try {
+            String sql = "UPDATE assets SET name = ?, manager = ?, purchasePlace = ?, purchaseDate = ?, purchasePrice = ?, currentLocation = ?, specialNotes = ? WHERE id = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, assetDto.getName());
+            ps.setString(2, assetDto.getManager());
+            ps.setString(3, assetDto.getPurchasePlace());
+            ps.setString(4, assetDto.getPurchaseDate());
+            ps.setDouble(5, assetDto.getPurchasePrice());
+            ps.setString(6, assetDto.getCurrentLocation());
+            ps.setString(7, assetDto.getSpecialNotes());
+            ps.setInt(8, assetDto.getId());
+
+            int count = ps.executeUpdate();
+            if (count == 1) {
+                System.out.println("비품 수정 성공: " + assetDto.getId());
+                return true;
+            } else {
+                System.out.println("비품 수정 실패: ID가 존재하지 않거나 잘못됨.");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("비품 수정 중 예외 발생: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
     
     // 비품 삭제 처리 메소드

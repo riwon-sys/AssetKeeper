@@ -1,5 +1,6 @@
 package controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,29 +15,30 @@ import model.dto.AssetDto;
 
 @WebServlet("/asset")
 public class AssetController extends HttpServlet {
+	
+	
 	// [1] 비품 전산 등록
 	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 	    System.out.println("asset post ok!!!");
+	    
+	    try {
+	        ObjectMapper mapper = new ObjectMapper();
+	        AssetDto assetDto = mapper.readValue(req.getReader(), AssetDto.class);
 
-	    // JSON 데이터를 AssetDto로 변환
-	    ObjectMapper mapper = new ObjectMapper();
-	    AssetDto assetDto = mapper.readValue(req.getReader(), AssetDto.class);
+	        boolean result = AssetDao.getInstance().insertAsset(assetDto);
 
-	    // DAO를 통해 데이터 삽입
-	    boolean result = AssetDao.getInstance().insertAsset(assetDto);
-
-	    // 응답 설정
-	    resp.setContentType("application/json");
-	    resp.setCharacterEncoding("UTF-8");
-
-	    if (result) {
-	        resp.setStatus(HttpServletResponse.SC_CREATED); // 201 Created
-	        resp.getWriter().print("{\"message\":\"비품 등록 성공\"}");
-	    } else {
-	        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request
-	        resp.getWriter().print("{\"message\":\"비품 등록 실패\"}");
+	        if (result) {
+	            resp.setStatus(HttpServletResponse.SC_CREATED);
+	            resp.getWriter().print("{\"message\":\"비품 등록 성공\"}");
+	        } else {
+	            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().print("{\"message\":\"비품 등록 실패\"}");
+	        }
+	    } catch (Exception e) {
+	        System.out.println("비품 등록 중 오류 발생: " + e.getMessage());
+	        e.printStackTrace();
 	    }
 	}
 
@@ -60,18 +62,36 @@ public class AssetController extends HttpServlet {
 	    }
 	}
 	
-	// [3] 비품 전산 수정
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		 System.out.println("asset put ok!!!");
-		 
-		 ObjectMapper mapper = new ObjectMapper();
-		 AssetDto assetDto = mapper.readValue(req.getReader(), AssetDto.class); // 리드벨류 - 바디
-		 
-		 boolean result = AssetDao.getInstance().updateAsset(assetDto);
-		 
-		 resp.setContentType("application/json");
-		 resp.getWriter().print(result);
+	    resp.setContentType("application/json");
+	    resp.setCharacterEncoding("UTF-8");
+
+	    try {
+	        // JSON 데이터를 Java 객체로 변환
+	        ObjectMapper mapper = new ObjectMapper();
+	        AssetDto assetDto = mapper.readValue(req.getInputStream(), AssetDto.class);
+
+	        System.out.println("비품 수정 요청 데이터: " + assetDto.toString()); // 디버깅 로그 추가
+
+	        boolean result = AssetDao.getInstance().updateAsset(assetDto);
+
+	        if (result) {
+	            resp.setStatus(HttpServletResponse.SC_OK);
+	            resp.getWriter().print("{\"message\":\"비품 수정 성공\"}");
+	            System.out.println("비품 수정 성공!");
+	        } else {
+	            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	            resp.getWriter().print("{\"message\":\"비품 수정 실패\"}");
+	            System.out.println("비품 수정 실패!");
+	        }
+
+	    } catch (Exception e) {
+	        resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+	        resp.getWriter().print("{\"message\":\"서버 오류\"}");
+	        System.out.println("비품 수정 중 오류 발생: " + e.getMessage());
+	        e.printStackTrace();
+	    }
 	}
 	
 	// [4] 비품 전산 삭제
